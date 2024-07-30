@@ -1,23 +1,25 @@
 # CoffeeMaker: Full-Stack Web Application
 
 **Line Coverage**
+
 ![Coverage](.github/badges/jacoco.svg)
 
 **Branch Coverage**
+
 ![Branches](.github/badges/branches.svg)
 
-**Technologies Used:** Java, Spring Boot, Hibernate, Maven, MySQL, Semantic UI, HTML, CSS, and deployed w/ CI
+**Technologies Used:** Java, Spring Boot, Hibernate, Maven, MySQL, Semantic UI [(community fork)](https://github.com/fomantic/Fomantic-UI), HTML, CSS, and deployed w/ CI (GitHub Actions)
 
 ## Overview
 
 Developed a full-stack web application in a team of 3 as an introduction to basic full-stack web development principles. The project explores various modern technologies and methodologies to help understand the considerations needed when delivering a robust and scalable application.
 
 * Test-driven development
-* Unit testing
-* Sequence and class diagramming (UML)
-* Backend and frontend design and implementation
+* [Unit testing](https://github.com/mdrxy/coffeemaker/tree/main/CoffeeMaker/src/test/java/edu/ncsu/csc/CoffeeMaker)
+* [Sequence](https://github.com/mdrxy/coffeemaker/wiki/Dynamic-Design) and [class diagramming (UML)](https://github.com/mdrxy/coffeemaker/wiki/Static-Design)
+* [Backend](https://github.com/mdrxy/coffeemaker/tree/main/CoffeeMaker/src/main/java/edu/ncsu/csc/CoffeeMaker/models) and [frontend design](https://github.com/mdrxy/coffeemaker/tree/main/images/UC4-Scenario-1) and [implementation](https://github.com/mdrxy/coffeemaker/tree/main/CoffeeMaker/src/main/resources/templates)
 * End point design
-* REST API implementation (CRUD)
+* [REST API implementation (CRUD)](https://github.com/mdrxy/coffeemaker/tree/main/CoffeeMaker/src/main/java/edu/ncsu/csc/CoffeeMaker/controllers)
 * Task & dependency testing
 
 ## Team Collaboration + Development Schedule
@@ -40,7 +42,13 @@ Our team followed a structured development schedule to ensure systematic progres
 
 ## Screenshots
 
-
+![](/images/screenshots/homepage.png)
+![](/images/screenshots/add-ingredient.png)
+![](/images/screenshots/add-recipe.png)
+![](/images/screenshots/edit-recipe.png)
+![](/images/screenshots/edit-error.png)
+![](/images/screenshots/edit-success.png)
+![](/images/screenshots/update-inventory.png)
 
 ## Prerequisites
 
