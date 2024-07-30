@@ -1,0 +1,59 @@
+html,
+body {
+	height: 100%;
+	margin: 0;
+}
+
+.wrapper {
+	min-height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.content {
+	flex-grow: 1;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+h1 {
+	padding-bottom: 1rem !important;
+}
+
+#contentBody {
+	padding-top: 5rem !important;
+	padding-bottom: 5rem !important;
+}
+
+.ingredientName {
+	/* Placeholder boxes should not be clickable */
+	pointer-events: none;
+	text-transform: capitalize;
+}
+
+.quantityPlaceholder {
+	/* Placeholder boxes should not be clickable */
+	pointer-events: none;
+}
+
+.ui.form .field .ingredientName::placeholder,
+.ui.form .field .quantityPlaceholder::placeholder {
+	color: #000000;
+	/* Override default read-only placeholder text color */
+}
+
+#successRecipeName,
+#successIngredientName {
+	text-transform: capitalize;
+}
+
+#nameInputPlaceholder {
+	pointer-events: none;
+	text-transform: capitalize;
+}
+
+#nameInputPlaceholder::placeholder {
+	color: #000000;
+	/* Override default read-only placeholder text color */
+}

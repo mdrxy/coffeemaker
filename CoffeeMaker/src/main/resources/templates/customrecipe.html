@@ -1,0 +1,399 @@
+<!DOCTYPE HTML>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <!-- Standard Meta -->
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+        <!-- Site Properties -->
+        <title>Add Recipe</title>
+
+        <script src="js/jquery.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/semantic.css">
+        <script src="js/semantic.js"></script>
+        <script src="js/app.js"></script>
+        <link rel="stylesheet" href="css/app.css"/>
+    </head>
+
+    <body>
+        <!-- Modal templates -->
+        <div th:insert="modals :: modals"></div>
+
+        <!-- Page layout -->
+        <div class="wrapper">
+            <div class="content">
+                <div id="contentBody" class="ui grid middle aligned container">
+                    <div class="column">
+                        <h1 class="ui centered header">Add Recipe</h1>
+
+                        <!-- Input -->
+                        <div class="ui segment">
+                            <form id="submitRecipeForm" class="ui form">
+                                <div class="ui two column stackable grid container">
+                                    
+                                    <!-- Name and price -->
+                                    <div class="column">
+                                        <div class="fields">
+                                            <div class="nine wide required field">
+                                                <label>Name</label>
+                                                <div class="ui input">
+                                                    <input id="nameInput" placeholder="Mocha" name="name" type="text">
+                                                </div>
+                                            </div>
+
+                                            <div class="seven wide required field">
+                                                <label>Price</label>
+                                                <div class="ui right labeled left icon input">
+                                                    <i class="dollar icon"></i>
+                                                        <input type="number" placeholder="1" min="1" max="1000" name="price" id="price"
+                                                            aria-label="Amount (to the nearest dollar)">
+                                                    <div class="ui basic label">.00</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Ingredients -->
+                                    <div class="column">
+                                        <div class="required field">
+                                            <label>Select Ingredients</label>
+                                            <div id="ingredientDropdown" class="ui clearable multiple search selection dropdown">
+                                                <i class="dropdown icon"></i>
+                                                <!-- Hidden input needed for validation -->
+                                                <input type="hidden" name="ingredient"> 
+                                                <div class="text"></div>
+                                            </div>
+                                        </div>                                    
+
+                                        <div class="compact negative basic ui animated fade right floated button clearIngredients">
+                                            <div class="visible content">
+                                                Clear Ingredients
+                                            </div>
+                                            <div class="hidden content">
+                                                <i class="x icon"></i>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Selected Ingredients list -->
+                                        <div class="field" id="ingredientList">
+                                            <!-- Populated here -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Submit -->
+                                <div class="ui centered grid">
+                                    <div class="center aligned column">
+                                        <div class="ui wrapping spaced buttons">
+                                            <button class="fluid ui primary labeled icon button" type="submit">
+                                                <i class="plus icon"></i>
+                                                Submit Recipe
+                                            </button>
+
+                                            <!-- TODO: clear form button -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Messages (hide/show these dynamically) -->
+                        <div class="ui icon success message hidden" id="success">
+                            <i class="check icon"></i>
+                            <div class="content">
+                                <div class="header"><span id="successRecipeName"></span> added successfully!</div>
+                                <p>Time to <a class="makeCoffee" href="makecoffee.html">make some coffee</a>... ☕️</p>
+                            </div>
+                        </div>
+                        <div class="ui icon error message hidden" id="duplicateName">
+                            <i class="x icon"></i>
+                            <div class="content">
+                                <div class="header">Invalid name</div>
+                                <p>Duplicate</p>
+                            </div>
+                        </div>
+                        <div class="ui icon error message hidden" id="noIngredients">
+                            <i class="x icon"></i>
+                            <div class="content">
+                                <div class="header">Invalid recipe</div>
+                                <p>No ingredients</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer class="ui bottom fixed borderless menu">
+            <div class="item">
+                <div class="spaced buttons">
+                    <div th:insert="footerLinks :: pages"></div>
+                </div>
+            </div>
+            
+            <div class="right menu">
+                <div class="item">
+                    <div th:insert="footerLinks :: homePage"></div>
+                </div>
+            </div>
+        </footer>
+
+        <script>
+            const successMessageElement = document.getElementById('success');
+            const duplicateNameErrorElement = document.getElementById('duplicateName');
+            const numIngredientsErrorElement = document.getElementById('noIngredients');
+            const ingredientList = document.getElementById("ingredientList");
+
+            // Initialize the dropdown with a sorted & capitalized list of Ingredient names
+            function fetchIngredients() {
+                $.get("/api/v1/inventory")
+                    .done(function (data) {
+                        if (data && data.ingredients && data.ingredients.length >= 0) {
+                            
+                            // Extract Ingredient names from returned data
+                            var ingredientNames = data.ingredients.map(function (ingredient) {
+                                // Necessary to capitalize names here instead of via CSS due to rendering delay
+                                return { name: ingredient.name.split(' ').map(word => word.charAt(0).toUpperCase()
+                                + word.slice(1)).join(' '), value: ingredient.name };
+                            });
+
+                            // Sort the ingredientNames array by name (alphabetically) before initializing the dropdown menu
+                            ingredientNames.sort(function (a, b) {
+                                return a.name.localeCompare(b.name);
+                            });
+
+                            // Initialize dropdown
+                            $('#ingredientDropdown').dropdown('setup menu', { values: ingredientNames });
+                        }
+                    })
+                    .fail(function (xhr, status, error) {
+                        handleAPIError(xhr, status, error);
+                    });
+            }
+
+            // Fire on page load
+            $(document).ready(function() {
+                // Fetch ingredient data from the server
+                fetchIngredients();
+
+                // Aesthetic: clearing necessary due to bug @ https://github.com/fomantic/Fomantic-UI/issues/2837
+                // Wherein the placeholder text doesn't render initially
+                $('#ingredientDropdown').dropdown('clear')
+                
+                // Allow for immediate data entry to form
+                $('#nameInput').focus();
+            });
+            
+            // Button to clear selected Ingredients
+            $('.clearIngredients').on('click', function () {
+                $('#ingredientDropdown').dropdown('clear');
+            });
+
+            // (Helper) clear entire form
+            function clearForm() {
+                var form = document.getElementById("submitRecipeForm");
+                if (form) {
+                    for (var i = 0; i < form.elements.length; i++) {
+                        var element = form.elements[i];
+                        // Check if the element is an input field or textarea
+                        if (element.tagName === "INPUT" || element.tagName === "TEXTAREA") {
+                            // Clear the value of the element
+                            element.value = "";
+                        }
+                    }
+                }
+            }
+            
+            // Dropdown multi select search menu behavior
+            $('#ingredientDropdown').dropdown({
+                showOnFocus: true,
+                clearable: true, // Needed for https://github.com/fomantic/Fomantic-UI/issues/2837
+                placeholder: 'All Ingredients',
+
+                // Each time a selection is made
+                onAdd: function(value, text, $selectedItem) {
+                    var ingredientFieldWrapper = document.createElement("div");
+                    ingredientFieldWrapper.classList.add("ingredient", "field");
+                    ingredientFieldWrapper.setAttribute("data-value", value);
+                    
+                        var ingredientFields = document.createElement("div");
+                        ingredientFields.classList.add("two", "fields");
+                    
+                            var ingredientNameField = document.createElement("div");
+                            ingredientNameField.classList.add("ingredient", "field"); 
+                            // Might be able to remove ingredient from this
+
+                                var nameLabel = document.createElement("label");
+                                nameLabel.textContent = "Ingredient";
+                                
+                                var ingredientInput = document.createElement("div");
+                                ingredientInput.classList.add("ui", "input");
+                                    
+                                    var ingredientInputElement = document.createElement("input");
+                                    ingredientInputElement.classList.add("ingredientName");
+                                    ingredientInputElement.placeholder = text;
+                                    ingredientInputElement.readOnly = "";
+                                    ingredientInputElement.type = "text";
+                                    ingredientInputElement.tabIndex = "-1";
+                                
+                        var quantityField = document.createElement("div");
+                        quantityField.classList.add("quantity", "field", "required");
+
+                            var quantityLabel = document.createElement("label");
+                            quantityLabel.textContent = "Quantity";
+
+                            var quantityInputElement = document.createElement("input");
+                            quantityInputElement.placeholder = "1";
+                            quantityInputElement.min = "1";
+                            quantityInputElement.type = "number";
+                            quantityInputElement.required = true;
+                            quantityInputElement.name = value + "_quantity";
+
+                    ingredientInput.appendChild(ingredientInputElement);
+
+                    ingredientNameField.appendChild(nameLabel);
+                    ingredientNameField.appendChild(ingredientInput);
+
+                    quantityField.appendChild(quantityLabel);
+                    quantityField.appendChild(quantityInputElement);
+
+                    ingredientFields.appendChild(ingredientNameField);
+                    ingredientFields.appendChild(quantityField);
+
+                    ingredientFieldWrapper.appendChild(ingredientFields);
+
+                    ingredientList.appendChild(ingredientFieldWrapper);
+                },
+                onRemove: function(removedValue, removedText, $removedItem) {
+                    var existingIngredient = document.querySelector('.ingredient[data-value="' + removedValue + '"]');
+                    existingIngredient.remove(); // Gets rid of ingredient row displayed below dropdown
+                }
+            });
+
+            $('#submitRecipeForm')
+                .form({
+                    // Validation
+                    inline: true,
+                    fields: {
+                        name: {
+                            identifier: 'name',
+                            rules: [
+                                {
+                                    type: 'empty',
+                                    prompt: 'Recipe name must not be empty'
+                                },
+                                {
+                                    type: 'maxLength[30]',
+                                    prompt: 'Recipe name must not exceed {ruleValue} characters'
+                                },
+                            ]
+                        },
+                        price: {
+                            identifier: 'price',
+                            rules: [
+                                {
+                                    type: 'empty',
+                                    prompt: 'Recipe price must not be empty'
+                                },
+                                {
+                                    type: 'integer[1..1000]',
+                                },
+                                {
+                                    type: 'maxValue[1000]',
+                                    prompt: 'Recipe price must not exceed {ruleValue}'
+                                }
+                            ]
+                        },
+                        ingredient: {
+                            identifier: 'ingredient',
+                            rules: [
+                                {
+                                    type: 'empty',
+                                    prompt: 'Recipe ingredient list must not be empty'
+                                }
+                            ]
+                        }
+                    }
+                })
+
+                // POST new Recipe
+                .submit(function (e) {
+                    e.preventDefault(); // Prevent the form from submitting normally due to our custom behavior
+
+                    // Prevent messages from showing when hit submit
+                    successMessageElement.classList.add('hidden');
+                    duplicateNameErrorElement.classList.add('hidden');
+                    numIngredientsErrorElement.classList.add('hidden');
+
+                    var formData = new FormData(this);
+                    var formDataArray = Array.from(formData.entries());
+
+                    var ingredients = [];
+                    for (var i = 2; i < formDataArray.length; i++) {
+                        var pair = formDataArray[i];
+                        var name = pair[0];
+                        var quantity = pair[1];
+                        
+                        // Strip `_quantity`
+                        name = name.replace("_quantity", "");
+                        var ingredient = constructIngredient(name, quantity)
+                        ingredients.push(ingredient)
+                    }
+
+                    ingredients.shift(); // Necessary to remove the hidden input (which is necessary for validation)
+
+                    // If after parsing the form data there are no Ingredients, show form error
+                    if (ingredients.length == 0) {
+                        numIngredientsErrorElement.classList.remove('hidden');
+                        return;
+                    }
+
+                    var recipeName = $('input[name="name"]').val().toLowerCase();
+                    var price = $('input[name="price"]').val();
+                    var recipe = constructRecipe(ingredients, recipeName, price);
+
+                    // POST newly constructed Recipe
+                    $.ajax({
+                        url: '/api/v1/recipes',
+                        contentType: 'application/json',
+                        method: 'POST',
+                        data: JSON.stringify(recipe), // Data to be sent to the server
+                        dataType: 'json', // Data type expected from the server
+
+                        // Callback functions to handle response
+                        success: function (response) {
+                            console.log('Success:', response);
+                            
+                            // Dynamically update the success message with the newly added Recipe name
+                            var recipeName = recipe.name;
+                            $('#successRecipeName').text(recipeName);
+                            
+                            // Update messages
+                            successMessageElement.classList.remove('hidden');
+                            numIngredientsErrorElement.classList.add('hidden');
+                            duplicateNameErrorElement.classList.add('hidden');
+                            
+                            clearForm();
+                            // Unselect chosen Ingredients
+                            $('#ingredientDropdown').dropdown('clear');
+                        },
+                        error: function (xhr, status, error) {
+                            var response = JSON.parse(xhr.responseText)
+                            successMessageElement.classList.add('hidden');
+
+                            if (response.message.includes("already exists")) {
+                                duplicateNameErrorElement.classList.remove('hidden');
+                            } else if (response.message.includes("Insufficient space")) {
+                                recipeCap();
+                            } else {
+                                handleAPIError(xhr, status, error);
+                            }
+                        }
+                    });
+
+                    $('#nameInput').focus(); // Allow for immediate data entry
+                });
+        </script>
+    </body>
+</html>

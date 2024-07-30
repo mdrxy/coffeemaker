@@ -1,0 +1,260 @@
+<!DOCTYPE HTML>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<!-- Standard Meta -->
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+		<!-- Site Properties -->
+		<title>Add Ingredient</title>
+
+		<script src="js/jquery.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/semantic.css">
+		<script src="js/semantic.js"></script>
+		<script src="js/app.js"></script>
+		<link rel="stylesheet" href="css/app.css"/>
+	</head>
+
+	<body>
+		<!-- Modal templates -->
+		<div th:insert="modals :: modals"></div>
+		
+		<!-- Page layout -->
+		<div class="wrapper">
+			<div class="content">
+				<div id="contentBody" class="ui grid container">
+					
+					<div class="column">
+						<h1 class="ui centered header">Add Ingredient</h1>
+
+						<div class="ui segment">
+							<!-- Ingredient list -->
+							<table class="ui celled striped blue scrolling table">
+								<thead>
+									<th class="ui medium header">
+										Ingredients in Inventory
+										<div class="compact negative basic ui animated fade right floated button" id="clearIngredients">
+											<div class="visible content">
+												Clear
+											</div>
+											<div class="hidden content">
+												<i class="x icon"></i>
+											</div>
+										</div>
+									</th>
+								</thead>
+								<!-- Populated via JS -->
+								<tbody id="ingredientsTableBody">
+									<tr>
+										<td>
+											Loading...
+										</td>
+									</tr>
+								</tbody>
+							</table>
+
+							<!-- Input -->
+							<div class="ui dividing header">Add New</div>
+							<form id="addIngredientForm" class="ui form">
+								<div class="field required">
+									<label>Name</label>
+
+									<div class="ui action input">
+										<input id="ingredientInput" type="text" name="ingredient" placeholder="Sugar">
+										<button id="submitIngredient" class="ui right labeled icon submit button">
+											Submit
+											<i class="plus icon"></i>
+										</button>
+									</div>
+								</div>
+							</form>
+
+							<!-- Messages (shown dynamically) -->
+							<div class="ui icon error message hidden" id="error">
+								<i class="x icon"></i>
+								<div class="content">
+									<div class="header">Duplicate ingredient name</div>
+									<p>Maybe try something else?</p>
+								</div>
+							</div>
+
+							<div class="ui icon success message hidden" id="success">
+								<i class="check icon"></i>
+								<div class="content">
+									<div class="header"><span id="successIngredientName"></span> added successfully!</div>
+									<p>Time to <a class="addRecipe" href="customrecipe.html">create a recipe</a>... ☕️</p>
+								</div>
+							</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<footer class="ui bottom fixed borderless menu">
+			<div class="item">
+				<div class="spaced buttons">
+					<div th:insert="footerLinks :: pages"></div>
+				</div>
+			</div>
+		
+			<div class="right menu">
+				<div class="item">
+					<div th:insert="footerLinks :: homePage"></div>
+				</div>
+			</div>
+		</footer>
+
+		<script>
+			const successMessageElement = document.getElementById('success');
+			const errorMessageElement = document.getElementById('error');
+			const defaultMsg = "Nothing currently stocked!";
+			const tbody = $("#ingredientsTableBody");
+			var ingredients = [];
+
+			// Render the table based on the current ingredients array
+			function renderTable() {
+				// Clear the existing rows
+				tbody.empty();
+
+				// If ingredients array is empty, add the default message as a single row
+				if (ingredients.length === 0) {
+					const tr = $("<tr>").addClass("ingredientName");
+					$("<td>").text(defaultMsg).appendTo(tr);
+					tbody.append(tr);
+				} else {
+					// Loop through the ingredients array and add rows for each ingredient
+					ingredients.forEach(function (ingredient) {
+						const tr = $("<tr>").addClass("ingredientName");
+						$("<td>").text(ingredient).appendTo(tr);
+						tbody.append(tr);
+					});
+				}
+			}
+
+			// Fetch data from DB and populate the array
+			function updateList() {
+				$.get("/api/v1/inventory")
+					.done(function (data) {
+						if (data && data.ingredients && data.ingredients.length >= 0) {
+							// Extract names from returned JSON data
+							ingredients = data.ingredients.map(function (ingredient) {
+								return ingredient.name;
+							});
+						}
+						renderTable();
+					})
+					.fail(function (xhr, status, error) {
+						handleAPIError(xhr, status, error);
+					});
+			}
+			
+			// Execute on page load
+			$(document).ready(function () {
+				updateList();
+				$('#ingredientInput').focus(); // Allow for immediate data entry
+			});
+
+			/*
+			 * Even though we've configured Fomantic to hide/show the success/error messages based
+			 * on the server's response, we need to handle cases where somebody presses the submit
+			 * button while form validation is preventing the API call (which would otherwise handle
+			 * showing the messages).
+			 */
+			$("#addIngredientForm").submit(function (event) {
+				successMessageElement.classList.add('hidden');
+				errorMessageElement.classList.add('hidden');
+			});
+
+			// Remove all Ingredients from Inventory
+			$('#clearIngredients')
+				.api({
+					url: '/api/v1/inventory',
+					method: 'DELETE',
+					onSuccess: function (response) {
+						console.log(response.message);
+						updateList();
+						successMessageElement.classList.add('hidden');
+						errorMessageElement.classList.add('hidden');
+					},
+					onFailure: function (response, element, xhr) {
+						// This shouldn't be reached since clearing theoretically always returns success
+						successMessageElement.classList.add('hidden');
+						handleAPIError(xhr, status, error);
+					}
+				});
+			
+			/*
+			 * Fomantic form validation and API interaction.
+			 *
+			 * The docs weren't entirely straightforward, so there are likely better ways to pass
+			 * the form data as urlData without using the beforeSend function but I couldn't find how.
+			 */
+			$('#addIngredientForm')
+				// Form validation
+				.form({
+					inline: true,
+					on: 'submit', // Not working as expected
+					fields: {
+						ingredient: {
+							identifier: 'ingredient',
+							rules: [
+								{
+									type: 'empty',
+									prompt: 'Ingredient name must not be empty'
+								},
+								{
+									type: 'maxLength[30]',
+									prompt: 'Ingredient name must not exceed {ruleValue} characters'
+								}
+							]
+						}
+					}
+				})
+
+				// API interaction
+				.api({
+					url: '/api/v1/inventory/{ingredient}',
+					method: 'POST',
+					serializeForm: true, 
+					beforeSend: function (settings) {
+						settings.urlData = {
+							ingredient: settings.data.ingredient
+						}
+
+						return settings;
+					},
+
+					// Valid response and response.success is true
+					onSuccess: function (response, element, xhr) {
+						console.log(response);
+
+						var ingredientName = $('input[name="ingredient"]').val();
+						$('#successIngredientName').text(ingredientName);
+						successMessageElement.classList.remove('hidden');
+						errorMessageElement.classList.add('hidden');
+
+						ingredients.push($("#ingredientInput").val().trim().toLowerCase());
+						$("#ingredientInput").val(""); // Clear input
+						renderTable();
+					},
+
+					// Request failed, or valid response but response.success is false
+					onFailure: function (response, element, xhr) {
+						// Don't clear input so that users can correct mistake
+						console.error("POST FAILED:", response, element);
+						console.error("XHR:", xhr.status);
+						console.error("STATUS:", response.status);
+						successMessageElement.classList.add('hidden');
+						
+						// Allows catching server errors between submissions rather than refreshing page
+						if (xhr.status == 409) {
+							errorMessageElement.classList.remove('hidden');					
+						} else {
+							handleAPIError(xhr, status, error);
+						}
+					}
+				})
+		</script>
+	</body>
+</html>

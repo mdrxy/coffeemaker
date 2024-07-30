@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+    <body>
+        <div th:fragment="pages">
+            <!-- role="button" to appropriately convey purpose to assistive technologies (screen readers) -->
+            <a class="addIngredient ui primary button" href="addingredient.html" role="button">Add Ingredient</a>
+            <a class="updateInventory ui primary button" href="inventory.html" role="button">Update Inventory</a>
+            <a class="addRecipe ui primary button" href="customrecipe.html" role="button">Add Recipe</a>
+            <a class="editRecipe ui primary button" href="editrecipe.html" role="button">Edit Recipe</a>
+            <a class="deleteRecipe ui primary button" href="deleterecipe.html" role="button">Delete Recipe</a>
+            <a class="makeCoffee ui violet button" href="makecoffee.html" role="button">Make Coffee</a>
+        </div>
+
+        <div th:fragment="homePage">
+            <a class="ui right floated labeled icon primary button" href="index.html" tabindex="0">
+                <!-- tabindex="0" necessary to be keyboard focusable: https://webaim.org/techniques/keyboard/tabindex -->
+                <i class="home icon"></i>
+                Return to Main Menu
+            </a>
+        </div>
+    </body>
+
+</html>

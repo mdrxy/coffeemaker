@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+    <body>
+        <div th:fragment="modals">
+            <div class="ui tiny modal" id="errorModal" tabindex="-1">
+                <div class="header"></div>
+                <div class="content"></div>
+                <div class="actions">
+                    <a class="ui primary right labeled icon button" type="button" href="index.html" aria-label="Home">
+                        Home
+                        <i class="home icon"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="ui tiny modal" id="deleteRecipeModal" tabindex="-1">
+                <div class="header"></div>
+                <div class="content"></div>
+                <div class="actions">
+                    <button class="ui deny button" type="button" aria-label="Close">Close</button>
+                    <a class="ui primary right labeled icon button" type="button" href="deleterecipe.html"
+                        aria-label="Delete a Recipe">
+                        Delete a Recipe
+                        <i class="delete icon"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="ui tiny modal" id="noRecipesModal" tabindex="-1">
+                <div class="header"></div>
+                <div class="content"></div>
+                <div class="actions">
+                    <button class="ui deny button" type="button" aria-label="Close">Close</button>
+                    <a class="addRecipe ui primary right labeled icon button" type="button" href="customrecipe.html"
+                        aria-label="Add a Recipe">
+                        Add a Recipe
+                        <i class="add icon"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="ui tiny modal" id="addIngredientModal" tabindex="-1">
+                <div class="header"></div>
+                <div class="content"></div>
+                <div class="actions">
+                    <button class="ui deny button" type="button" aria-label="Close">Close</button>
+                    <a class="ui primary right labeled icon button" type="button" href="addingredient.html"
+                        aria-label="Add an Ingredient">
+                        Add Ingredient
+                        <i class="add icon"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </body>
+
+</html>
